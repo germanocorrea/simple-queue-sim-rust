@@ -34,9 +34,39 @@ struct Queue<T: Unsigned> {
     arrivable: Option<ArrivableQueue>,
 }
 
+impl<T: PartialOrd + SubAssign + AddAssign + Unsigned> Queue<T> {
+    fn enter(&mut self) {
+        self.waiting += T::one();
+    }
+
+    fn exit(&mut self) {
+        self.waiting -= T::one();
+    }
+
+    fn lost(&mut self) {
+        match self.finite.as_mut() {
+            Some(f) => f.lost(),
+            None => {}
+        }
+    }
+
+    fn has_space(&self) -> bool {
+        match self.finite.as_ref() {
+            Some(f) => self.waiting < f.capacity,
+            None => true,
+        }
+    }
+}
+
 struct FiniteQueue<T> {
     capacity: T,
     lost: T,
+}
+
+impl<T: PartialOrd + SubAssign + AddAssign + Unsigned> FiniteQueue<T> {
+    fn lost(&mut self) {
+        self.lost += T::one();
+    }
 }
 
 struct ArrivableQueue {
@@ -61,34 +91,4 @@ struct Event<T> {
     time_to_ocurr: f32,
     origin_queue_id: Option<T>,
     destination_queue_id: Option<T>,
-}
-
-impl<T: PartialOrd + SubAssign + AddAssign + Unsigned> FiniteQueue<T> {
-    fn lost(&mut self) {
-        self.lost += T::one();
-    }
-}
-
-impl<T: PartialOrd + SubAssign + AddAssign + Unsigned> Queue<T> {
-    fn enter(&mut self) {
-        self.waiting += T::one();
-    }
-
-    fn exit(&mut self) {
-        self.waiting -= T::one();
-    }
-
-    fn lost(&mut self) {
-        match self.finite.as_mut() {
-            Some(f) => f.lost(),
-            None => {}
-        }
-    }
-
-    fn has_space(&self) -> bool {
-        match self.finite.as_ref() {
-            Some(f) => self.waiting < f.capacity,
-            None => true,
-        }
-    }
 }
